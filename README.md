@@ -116,7 +116,7 @@ sudo apt install postgresql-client-common postgresql-client zip;
 git clone https://github.com/K12-Analytics-Engineering/edfi-on-azure.git;
 
 # download and import ed-fi db templates
-cd edfi-azure;
+cd edfi-on-azure;
 bash init.sh
 bash import-ods-data.sh <POSTGRESPASSWORD> # DEV TODO: replace with postgres password
 
