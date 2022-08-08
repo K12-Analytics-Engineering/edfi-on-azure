@@ -22,7 +22,7 @@ Use the Bash environment in [Azure Cloud Shell](https://docs.microsoft.com/en-us
 brew update && brew install azure-cli;
 ```
 
-## Install
+## Deploy
 ```sh
 az login;
 az account set --subscription "XXXXXXXXXX"; # TODO: update azure subscription id
