@@ -113,7 +113,7 @@ ssh azureuser@XXX.XXX.XXX.XXX; # DEV TODO: update ip to vms newly created public
 sudo apt install postgresql-client-common postgresql-client zip;
 
 # clone this git repo to vm
-git clone hhttps://github.com/K12-Analytics-Engineering/edfi-on-azure.git;
+git clone https://github.com/K12-Analytics-Engineering/edfi-on-azure.git;
 
 # download and import ed-fi db templates
 cd edfi-azure;
