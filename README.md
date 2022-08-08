@@ -25,7 +25,7 @@ brew update && brew install azure-cli;
 ## Deploy
 ```sh
 az login;
-az account set --subscription "XXXXXXXXXX"; # TODO: update azure subscription id
+az account set --subscription "XXXXXXXXXX"; # DEV TODO: update azure subscription id
 az configure --defaults location=centralus;
 ```
 
@@ -171,7 +171,7 @@ az webapp restart \
 
 
 ### Ed-Fi Admin App
-Before you deploy the Ed-Fi API on Azure App Services, you will first build and a push a Docker image to Azure Container Registry.
+Before you deploy the Ed-Fi Admin App on Azure App Services, you will first build and a push a Docker image to Azure Container Registry.
 ```sh
 az acr build --registry edfialliance --image adminapp edfi-admin-app/.;
 
