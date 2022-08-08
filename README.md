@@ -157,7 +157,8 @@ az webapp create \
     --name edfi-api \
     --deployment-container-image-name edfialliance.azurecr.io/api:latest \
     --vnet virtual-network \
-    --subnet app-services-subnet;
+    --subnet app-services-subnet \
+    --https-only true;
 
 az webapp config appsettings set \
     --resource-group analytics \
@@ -181,7 +182,8 @@ az webapp create \
     --name edfi-admin-app \
     --deployment-container-image-name edfialliance.azurecr.io/adminapp:latest \
     --vnet virtual-network \
-    --subnet app-services-subnet;
+    --subnet app-services-subnet \
+    --https-only true;
 
 az webapp config appsettings set \
     --resource-group analytics \
