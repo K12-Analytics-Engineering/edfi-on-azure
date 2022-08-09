@@ -27,13 +27,13 @@ brew update && brew install azure-cli;
 az login;
 az account set --subscription "XXXXXXXXXX"; # DEV TODO: update azure subscription id
 az configure --defaults location=centralus;
-
-export POSTGRES_NAME="edfi-ods-grand-bend" $ DEV TODO: update postgres name
 ```
 
 ### Azure Database for PostgreSQL - Flexible Server
 Azure Database for PostgreSQL - Flexible Server is a fully managed PostgreSQL database as a service offering. The command below will also create a resource group, virtual network, subnet, and private dns zone. After the command run and the PostgreSQL instance has been created, the CLI will output the password for the *postgres* user.
 ```sh
+export POSTGRES_NAME="edfi-ods-grand-bend"; # DEV TODO: update postgres name
+
 # create sql instance
 az postgres flexible-server create \
     --location centralus \
@@ -119,7 +119,7 @@ git clone https://github.com/K12-Analytics-Engineering/edfi-on-azure.git;
 
 # download and import ed-fi db templates
 cd edfi-on-azure;
-bash init.sh
+bash init.sh;
 # PostgreSQL full server name example: edfi-ods-grand-bend.postgres.database.azure.com
 bash import-ods-data.sh <POSTGRESPASSWORD> <POSTGRESQL FULL SERVER NAME> # DEV TODO: replace with postgres password
 
@@ -131,14 +131,16 @@ sudo shutdown;
 ### Ed-Fi API
 Before you deploy the Ed-Fi API on Azure App Services, you will first build and a push a Docker image to Azure Container Registry.
 ```sh
+export REGISTRY_NAME="grandbend"; # DEV TODO: update registry name
+
 # create container registry
 az acr create \
-    --name edfialliance \
+    --name $REGISTRY_NAME \
     --resource-group analytics \
     --sku Basic \
     --admin-enabled true;
 
-az acr build --registry edfialliance --image api edfi-api/.;
+az acr build --registry $REGISTRY_NAME --image api edfi-api/.;
 
 # app services
 az network vnet subnet create \
@@ -157,19 +159,24 @@ az appservice plan create \
 az webapp create \
     --resource-group analytics \
     --plan edfi \
-    --name edfi-api \
-    --deployment-container-image-name edfialliance.azurecr.io/api:latest \
+    --name "edfi-api-${REGISTRY_NAME}" \
+    --deployment-container-image-name "${REGISTRY_NAME}.azurecr.io/api:latest" \
     --vnet virtual-network \
     --subnet app-services-subnet \
     --https-only true;
 
 az webapp config appsettings set \
     --resource-group analytics \
-    --name edfi-api \
+    --name "edfi-api-${REGISTRY_NAME}" \
     --settings DB_PASS="XXXXXXXXX"; # DEV TODO: replace with postgres password
 
+az webapp config appsettings set \
+    --resource-group analytics \
+    --name "edfi-api-${REGISTRY_NAME}" \
+    --settings DB_HOST="${POSTGRES_NAME}.postgres.database.azure.com";
+
 az webapp restart \
-    --name edfi-api \
+    --name "edfi-api-${REGISTRY_NAME}" \
     --resource-group analytics;
 ```
 
@@ -177,33 +184,38 @@ az webapp restart \
 ### Ed-Fi Admin App
 Before you deploy the Ed-Fi Admin App on Azure App Services, you will first build and a push a Docker image to Azure Container Registry.
 ```sh
-az acr build --registry edfialliance --image adminapp edfi-admin-app/.;
+az acr build --registry $REGISTRY_NAME --image adminapp edfi-admin-app/.;
 
 az webapp create \
     --resource-group analytics \
     --plan edfi \
-    --name edfi-admin-app \
-    --deployment-container-image-name edfialliance.azurecr.io/adminapp:latest \
+    --name "edfi-admin-app-${REGISTRY_NAME}" \
+    --deployment-container-image-name "${REGISTRY_NAME}.azurecr.io/adminapp:latest" \
     --vnet virtual-network \
     --subnet app-services-subnet \
     --https-only true;
 
 az webapp config appsettings set \
     --resource-group analytics \
-    --name edfi-admin-app \
+    --name "edfi-admin-app-${REGISTRY_NAME}" \
     --settings DB_PASS="XXXXXXXXX"; # DEV TODO: replace with postgres password
 
 az webapp config appsettings set \
     --resource-group analytics \
-    --name edfi-admin-app \
+    --name "edfi-admin-app-${REGISTRY_NAME}" \
+    --settings DB_HOST="${POSTGRES_NAME}.postgres.database.azure.com";
+
+az webapp config appsettings set \
+    --resource-group analytics \
+    --name "edfi-admin-app-${REGISTRY_NAME}" \
     --settings ENCRYPTION_KEY=$(/usr/bin/openssl rand -base64 32);
 
 az webapp config appsettings set \
     --resource-group analytics \
-    --name edfi-admin-app \
-    --settings API_URL="https://edfi-api.azurewebsites.net"; # DEV TODO: replace with edfi api url (ie. https://edfi-api.azurewebsites.net)
+    --name "edfi-admin-app-${REGISTRY_NAME}" \
+    --settings API_URL="https://edf-api-${REGISTRY_NAME}.azurewebsites.net"; # DEV TODO: replace with edfi api url (ie. https://edfi-api.azurewebsites.net)
 
 az webapp restart \
-    --name edfi-admin-app \
+    --name "edfi-admin-app-${REGISTRY_NAME}" \
     --resource-group analytics;
 ```
