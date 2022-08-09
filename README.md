@@ -11,8 +11,8 @@ The Azure CLI commands below will deploy the following Ed-Fi components on Azure
 | Component             | Azure product | Configuration                                   | Yearly cost            |
 | --------------------- | -------------------- | ----------------------------------------------- | ---------------------- |
 | Ed-Fi ODS             | Azure Database for PostgreSQL            | PostgreSQL 11,<br>2 vCPUs,<br>4 GB of memory,<br> Flexible Server,<br>Burstable      | $720 / year              |
-| Ed-Fi API             | Azure App Services                       | 1 vCPU,<br>1.75 GB of memory                                                         | $210 / year |
-| Ed-Fi Admin App       | Azure App Services                       | 1 vCPU,<br>1.75 GB of memory                                                         | $210 / year |
+| Ed-Fi API             | Azure App Services                       | 2 vCPU,<br>3.5 GB of memory                                                         | $300 / year |
+| Ed-Fi Admin App       | Azure App Services                       | 2 vCPU,<br>3.5 GB of memory                                                         | $300 / year |
 
 ## Prerequisites
 Use the Bash environment in [Azure Cloud Shell](https://docs.microsoft.com/en-us/azure/cloud-shell/quickstart). For more information, see [Azure Cloud Shell Quickstart - Bash](https://docs.microsoft.com/en-us/azure/cloud-shell/quickstart). If you prefer to run CLI reference commands locally, [install](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) the Azure CLI
@@ -154,7 +154,7 @@ az appservice plan create \
     --name edfi \
     --resource-group analytics \
      --is-linux \
-     --sku B1;
+     --sku B2;
 
 az webapp create \
     --resource-group analytics \
