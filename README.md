@@ -27,6 +27,8 @@ brew update && brew install azure-cli;
 az login;
 az account set --subscription "XXXXXXXXXX"; # DEV TODO: update azure subscription id
 az configure --defaults location=centralus;
+
+export POSTGRES_NAME="edfi-ods-grand-bend" $ DEV TODO: update postgres name
 ```
 
 ### Azure Database for PostgreSQL - Flexible Server
@@ -36,7 +38,7 @@ Azure Database for PostgreSQL - Flexible Server is a fully managed PostgreSQL da
 az postgres flexible-server create \
     --location centralus \
     --resource-group analytics \
-    --name edfi-ods \
+    --name $POSTGRES_NAME \
     --database-name EdFi_Admin \
     --vnet virtual-network \
     --subnet sql-instances \
@@ -50,29 +52,29 @@ az postgres flexible-server create \
 # enable pgcrypto extension
 az postgres flexible-server parameter set \
     --resource-group analytics  \
-    --server-name edfi-ods \
+    --server-name $POSTGRES_NAME \
     --name azure.extensions \
     --value PGCRYPTO;
 
 # create databases
 az postgres flexible-server db create \
     --resource-group analytics \
-    --server-name edfi-ods \
+    --server-name $POSTGRES_NAME \
     --database-name EdFi_Security;
 
 az postgres flexible-server db create \
     --resource-group analytics \
-    --server-name edfi-ods \
+    --server-name $POSTGRES_NAME \
     --database-name EdFi_Ods_2023;
 
 az postgres flexible-server db create \
     --resource-group analytics \
-    --server-name edfi-ods \
+    --server-name $POSTGRES_NAME \
     --database-name EdFi_Ods_2022;
 
 az postgres flexible-server db create \
     --resource-group analytics \
-    --server-name edfi-ods \
+    --server-name $POSTGRES_NAME \
     --database-name EdFi_Ods_2021;
 ```
 
@@ -118,7 +120,8 @@ git clone https://github.com/K12-Analytics-Engineering/edfi-on-azure.git;
 # download and import ed-fi db templates
 cd edfi-on-azure;
 bash init.sh
-bash import-ods-data.sh <POSTGRESPASSWORD> # DEV TODO: replace with postgres password
+# PostgreSQL full server name example: edfi-ods-grand-bend.postgres.database.azure.com
+bash import-ods-data.sh <POSTGRESPASSWORD> <POSTGRESQL FULL SERVER NAME> # DEV TODO: replace with postgres password
 
 # shutdown vm
 sudo shutdown;
