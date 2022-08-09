@@ -213,7 +213,7 @@ az webapp config appsettings set \
 az webapp config appsettings set \
     --resource-group analytics \
     --name "edfi-admin-app-${REGISTRY_NAME}" \
-    --settings API_URL="https://edf-api-${REGISTRY_NAME}.azurewebsites.net"; # DEV TODO: replace with edfi api url (ie. https://edfi-api.azurewebsites.net)
+    --settings API_URL="https://edfi-api-${REGISTRY_NAME}.azurewebsites.net"; # DEV TODO: replace with edfi api url (ie. https://edfi-api.azurewebsites.net)
 
 az webapp restart \
     --name "edfi-admin-app-${REGISTRY_NAME}" \
