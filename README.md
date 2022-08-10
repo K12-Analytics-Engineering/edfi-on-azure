@@ -163,12 +163,37 @@ az webapp create \
     --deployment-container-image-name "${REGISTRY_NAME}.azurecr.io/api:latest" \
     --vnet virtual-network \
     --subnet app-services-subnet \
-    --https-only true;
+    --https-only true \
+    --assign-identity '[system]';
+
+# retrieve object id of managed id
+az webapp identity show \
+    --name "edfi-api-${REGISTRY_NAME}" \
+    --resource-group analytics \
+    --query principalId;
+
+# enter the value from above for the object-id below
+az keyvault set-policy \
+    --name edfi \
+    --object-id "XXXXXXXXX" \
+    --secret-permissions get list;
+
+az keyvault create \
+    --name edfi \
+    --resource-group analytics;
+
+az keyvault secret set \
+    --name db-pass \
+    --vault-name edfi \
+    --value <POSTGRESPASSWORD>;
+
+# run command below to retrieve secret id
+az keyvault secret show --name db-pass --vault-name edfi --query id;
 
 az webapp config appsettings set \
     --resource-group analytics \
     --name "edfi-api-${REGISTRY_NAME}" \
-    --settings DB_PASS="XXXXXXXXX"; # DEV TODO: replace with postgres password
+    --settings DB_PASS="@Microsoft.KeyVault(SecretUri=https://edfi.vault.azure.net/secrets/db-pass/XXXXXXX)";
 
 az webapp config appsettings set \
     --resource-group analytics \
@@ -193,12 +218,28 @@ az webapp create \
     --deployment-container-image-name "${REGISTRY_NAME}.azurecr.io/adminapp:latest" \
     --vnet virtual-network \
     --subnet app-services-subnet \
-    --https-only true;
+    --https-only true \
+    --assign-identity '[system]';
+
+# retrieve object id of managed id
+az webapp identity show \
+    --name "edfi-admin-app-${REGISTRY_NAME}" \
+    --resource-group analytics \
+    --query principalId;
+
+# enter the value from above for the object-id below
+az keyvault set-policy \
+    --name edfi \
+    --object-id "XXXXXXXXX" \
+    --secret-permissions get list;
+
+# run command below to retrieve secret id
+az keyvault secret show --name db-pass --vault-name edfi --query id;
 
 az webapp config appsettings set \
     --resource-group analytics \
     --name "edfi-admin-app-${REGISTRY_NAME}" \
-    --settings DB_PASS="XXXXXXXXX"; # DEV TODO: replace with postgres password
+    --settings DB_PASS="@Microsoft.KeyVault(SecretUri=https://edfi.vault.azure.net/secrets/db-pass/XXXXXXX)";
 
 az webapp config appsettings set \
     --resource-group analytics \
