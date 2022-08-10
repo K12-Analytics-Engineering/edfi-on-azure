@@ -131,16 +131,27 @@ sudo shutdown;
 ### Ed-Fi API
 Before you deploy the Ed-Fi API on Azure App Services, you will first build and a push a Docker image to Azure Container Registry.
 ```sh
-export REGISTRY_NAME="grandbend"; # DEV TODO: update registry name
+export LEA_NAME="grandbend"; # DEV TODO: update name
+
+# create key vault
+az keyvault create \
+    --name "vault-${LEA_NAME}" \
+    --resource-group analytics;
+
+# store postgres password as secret
+az keyvault secret set \
+    --name db-pass \
+    --vault-name "vault-${LEA_NAME}" \
+    --value <POSTGRESPASSWORD>;
 
 # create container registry
 az acr create \
-    --name $REGISTRY_NAME \
+    --name $LEA_NAME \
     --resource-group analytics \
     --sku Basic \
     --admin-enabled true;
 
-az acr build --registry $REGISTRY_NAME --image api edfi-api/.;
+az acr build --registry $LEA_NAME --image api edfi-api/.;
 
 # app services
 az network vnet subnet create \
@@ -159,8 +170,8 @@ az appservice plan create \
 az webapp create \
     --resource-group analytics \
     --plan edfi \
-    --name "edfi-api-${REGISTRY_NAME}" \
-    --deployment-container-image-name "${REGISTRY_NAME}.azurecr.io/api:latest" \
+    --name "edfi-api-${LEA_NAME}" \
+    --deployment-container-image-name "${LEA_NAME}.azurecr.io/api:latest" \
     --vnet virtual-network \
     --subnet app-services-subnet \
     --https-only true \
@@ -168,40 +179,34 @@ az webapp create \
 
 # retrieve object id of managed id
 az webapp identity show \
-    --name "edfi-api-${REGISTRY_NAME}" \
+    --name "edfi-api-${LEA_NAME}" \
     --resource-group analytics \
     --query principalId;
 
 # enter the value from above for the object-id below
 az keyvault set-policy \
-    --name edfi \
+    --name "vault-${LEA_NAME}" \
     --object-id "XXXXXXXXX" \
     --secret-permissions get list;
 
-az keyvault create \
-    --name edfi \
-    --resource-group analytics;
-
-az keyvault secret set \
-    --name db-pass \
-    --vault-name edfi \
-    --value <POSTGRESPASSWORD>;
-
 # run command below to retrieve secret id
-az keyvault secret show --name db-pass --vault-name edfi --query id;
+az keyvault secret show \
+    --name db-pass \
+    --vault-name "vault-${LEA_NAME}" \
+    --query id;
 
 az webapp config appsettings set \
     --resource-group analytics \
-    --name "edfi-api-${REGISTRY_NAME}" \
+    --name "edfi-api-${LEA_NAME}" \
     --settings DB_PASS="@Microsoft.KeyVault(SecretUri=https://edfi.vault.azure.net/secrets/db-pass/XXXXXXX)";
 
 az webapp config appsettings set \
     --resource-group analytics \
-    --name "edfi-api-${REGISTRY_NAME}" \
+    --name "edfi-api-${LEA_NAME}" \
     --settings DB_HOST="${POSTGRES_NAME}.postgres.database.azure.com";
 
 az webapp restart \
-    --name "edfi-api-${REGISTRY_NAME}" \
+    --name "edfi-api-${LEA_NAME}" \
     --resource-group analytics;
 ```
 
@@ -209,13 +214,13 @@ az webapp restart \
 ### Ed-Fi Admin App
 Before you deploy the Ed-Fi Admin App on Azure App Services, you will first build and a push a Docker image to Azure Container Registry.
 ```sh
-az acr build --registry $REGISTRY_NAME --image adminapp edfi-admin-app/.;
+az acr build --registry $LEA_NAME --image adminapp edfi-admin-app/.;
 
 az webapp create \
     --resource-group analytics \
     --plan edfi \
-    --name "edfi-admin-app-${REGISTRY_NAME}" \
-    --deployment-container-image-name "${REGISTRY_NAME}.azurecr.io/adminapp:latest" \
+    --name "edfi-admin-app-${LEA_NAME}" \
+    --deployment-container-image-name "${LEA_NAME}.azurecr.io/adminapp:latest" \
     --vnet virtual-network \
     --subnet app-services-subnet \
     --https-only true \
@@ -223,40 +228,43 @@ az webapp create \
 
 # retrieve object id of managed id
 az webapp identity show \
-    --name "edfi-admin-app-${REGISTRY_NAME}" \
+    --name "edfi-admin-app-${LEA_NAME}" \
     --resource-group analytics \
     --query principalId;
 
 # enter the value from above for the object-id below
 az keyvault set-policy \
-    --name edfi \
+    --name "vault-${LEA_NAME}" \
     --object-id "XXXXXXXXX" \
     --secret-permissions get list;
 
 # run command below to retrieve secret id
-az keyvault secret show --name db-pass --vault-name edfi --query id;
+az keyvault secret show \
+    --name db-pass \
+    --vault-name "vault-${LEA_NAME}" \
+    --query id;
 
 az webapp config appsettings set \
     --resource-group analytics \
-    --name "edfi-admin-app-${REGISTRY_NAME}" \
+    --name "edfi-admin-app-${LEA_NAME}" \
     --settings DB_PASS="@Microsoft.KeyVault(SecretUri=https://edfi.vault.azure.net/secrets/db-pass/XXXXXXX)";
 
 az webapp config appsettings set \
     --resource-group analytics \
-    --name "edfi-admin-app-${REGISTRY_NAME}" \
+    --name "edfi-admin-app-${LEA_NAME}" \
     --settings DB_HOST="${POSTGRES_NAME}.postgres.database.azure.com";
 
 az webapp config appsettings set \
     --resource-group analytics \
-    --name "edfi-admin-app-${REGISTRY_NAME}" \
+    --name "edfi-admin-app-${LEA_NAME}" \
     --settings ENCRYPTION_KEY=$(/usr/bin/openssl rand -base64 32);
 
 az webapp config appsettings set \
     --resource-group analytics \
-    --name "edfi-admin-app-${REGISTRY_NAME}" \
-    --settings API_URL="https://edfi-api-${REGISTRY_NAME}.azurewebsites.net"; # DEV TODO: replace with edfi api url (ie. https://edfi-api.azurewebsites.net)
+    --name "edfi-admin-app-${LEA_NAME}" \
+    --settings API_URL="https://edfi-api-${LEA_NAME}.azurewebsites.net"; # DEV TODO: replace with edfi api url (ie. https://edfi-api.azurewebsites.net)
 
 az webapp restart \
-    --name "edfi-admin-app-${REGISTRY_NAME}" \
+    --name "edfi-admin-app-${LEA_NAME}" \
     --resource-group analytics;
 ```
