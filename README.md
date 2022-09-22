@@ -1,5 +1,5 @@
 # Ed-Fi on Azure
-The Azure CLI commands below will deploy the following Ed-Fi components on Azure.
+The Azure CLI commands below will deploy the following Ed-Fi components on Azure. This installer uses the Azure CLI in place of infrastructure as code solutions such as Terraform because the purpose of the installer is to explain each step along the way. Take your time and read through each section to ensure you understand each component of the Ed-Fi platform on Azure.
 
 * Ed-Fi API and ODS Suite 3 v5.3
 * Ed-Fi Admin App v2.3.2
@@ -15,30 +15,46 @@ The Azure CLI commands below will deploy the following Ed-Fi components on Azure
 | Ed-Fi Admin App       | Azure App Services                       | 2 vCPU,<br>3.5 GB of memory                                                         | $300 / year |
 
 ## Prerequisites
-Use the Bash environment in [Azure Cloud Shell](https://docs.microsoft.com/en-us/azure/cloud-shell/quickstart). For more information, see [Azure Cloud Shell Quickstart - Bash](https://docs.microsoft.com/en-us/azure/cloud-shell/quickstart). If you prefer to run CLI reference commands locally, [install](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) the Azure CLI
+There are several ways to run through this installer. You can use the Bash environment in [Azure Cloud Shell](https://docs.microsoft.com/en-us/azure/cloud-shell/quickstart). For more information, see [Azure Cloud Shell Quickstart - Bash](https://docs.microsoft.com/en-us/azure/cloud-shell/quickstart). If you prefer to run CLI reference commands locally, you can [install](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) the Azure CLI.
 
+If you are on MacOS, the Azure CLI can be installed via [Homebrew](https://brew.sh).
 ```sh
-# MacOS with brew
 brew update && brew install azure-cli;
 ```
 
-## Deploy
+# Table of Contents  
+* [Environment variables](#environment-variables)
+* [Ed-Fi ODS](#ed-fi-ods)
+
+
+## Environment variables
+Throughout the installer, you will be creating resources in Azure. Those resources are given unique ids which you will store in various environment variables to be used in future commands.
+
+Run the commands below to create an environment variable that is set to your Azure subscription ID as well as authenticate and configure the Azure CLI.
+
 ```sh
+export AZ_SUBSCRIPTION_ID=XXXXXXXXXX;
+
 az login;
-az account set --subscription "XXXXXXXXXX"; # DEV TODO: update azure subscription id
+az account set --subscription $AZ_SUBSCRIPTION_ID;
 az configure --defaults location=centralus;
 ```
 
-### Azure Database for PostgreSQL - Flexible Server
-Azure Database for PostgreSQL - Flexible Server is a fully managed PostgreSQL database as a service offering. The command below will also create a resource group, virtual network, subnet, and private dns zone. After the command run and the PostgreSQL instance has been created, the CLI will output the password for the *postgres* user.
-```sh
-export POSTGRES_NAME="edfi-ods-grand-bend"; # DEV TODO: update postgres name
+## Ed-Fi ODS
+The Ed-Fi Alliance supports PostgreSQL and SQL Server for the Ed-Fi ODS. This installer uses PostgreSQL via a fully managed PostgreSQL database as a service offering, Azure Database for PostgreSQL - Flexible Server. Using a managed service allows us to look to Azure to handle things like security and software updates, automatic backups, and more.
 
+Update the value below for your specific district and run the command to create a `AZ_PG_SERVER_NAME` environment variable.
+```sh
+export AZ_PG_SERVER_NAME="edfi-ods-grand-bend";
+```
+
+The command below to create your PostgreSQL instance will also create a bunch of other things in the background including a resource group, virtual network, subnet, and private dns zone. After the command runs and the PostgreSQL instance has been created, the CLI will output the password for the *postgres* user.
+```sh
 # create sql instance
 az postgres flexible-server create \
     --location centralus \
     --resource-group analytics \
-    --name $POSTGRES_NAME \
+    --name $AZ_PG_SERVER_NAME \
     --database-name EdFi_Admin \
     --vnet virtual-network \
     --subnet sql-instances \
@@ -48,33 +64,38 @@ az postgres flexible-server create \
     --storage-size 32 \
     --version 11 \
     --high-availability Disabled;
-
+```
+```sh
 # enable pgcrypto extension
 az postgres flexible-server parameter set \
     --resource-group analytics  \
-    --server-name $POSTGRES_NAME \
+    --server-name $AZ_PG_SERVER_NAME \
     --name azure.extensions \
     --value PGCRYPTO;
-
+```
+```sh
 # create databases
 az postgres flexible-server db create \
     --resource-group analytics \
-    --server-name $POSTGRES_NAME \
+    --server-name $AZ_PG_SERVER_NAME \
     --database-name EdFi_Security;
-
+```
+```sh
 az postgres flexible-server db create \
     --resource-group analytics \
-    --server-name $POSTGRES_NAME \
+    --server-name $AZ_PG_SERVER_NAME \
     --database-name EdFi_Ods_2023;
-
+```
+```sh
 az postgres flexible-server db create \
     --resource-group analytics \
-    --server-name $POSTGRES_NAME \
+    --server-name $AZ_PG_SERVER_NAME \
     --database-name EdFi_Ods_2022;
-
+```
+```sh
 az postgres flexible-server db create \
     --resource-group analytics \
-    --server-name $POSTGRES_NAME \
+    --server-name $AZ_PG_SERVER_NAME \
     --database-name EdFi_Ods_2021;
 ```
 
@@ -203,7 +224,7 @@ az webapp config appsettings set \
 az webapp config appsettings set \
     --resource-group analytics \
     --name "edfi-api-${LEA_NAME}" \
-    --settings DB_HOST="${POSTGRES_NAME}.postgres.database.azure.com";
+    --settings DB_HOST="${AZ_PG_SERVER_NAME}.postgres.database.azure.com";
 
 az webapp restart \
     --name "edfi-api-${LEA_NAME}" \
@@ -252,7 +273,7 @@ az webapp config appsettings set \
 az webapp config appsettings set \
     --resource-group analytics \
     --name "edfi-admin-app-${LEA_NAME}" \
-    --settings DB_HOST="${POSTGRES_NAME}.postgres.database.azure.com";
+    --settings DB_HOST="${AZ_PG_SERVER_NAME}.postgres.database.azure.com";
 
 az webapp config appsettings set \
     --resource-group analytics \
