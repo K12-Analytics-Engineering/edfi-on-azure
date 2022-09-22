@@ -48,9 +48,8 @@ Update the value below for your specific district and run the command to create 
 export AZ_PG_SERVER_NAME="edfi-ods-grand-bend";
 ```
 
-The command below to create your PostgreSQL instance will also create a bunch of other things in the background including a resource group, virtual network, subnet, and private dns zone. After the command runs and the PostgreSQL instance has been created, the CLI will output the password for the *postgres* user.
+Running the command below to create your PostgreSQL instance will also create a bunch of other things in the background including a resource group, virtual network, subnet, and private dns zone. After the command runs and the PostgreSQL instance has been created, the CLI will output the password for the *postgres* user.
 ```sh
-# create sql instance
 az postgres flexible-server create \
     --location centralus \
     --resource-group analytics \
@@ -65,16 +64,34 @@ az postgres flexible-server create \
     --version 11 \
     --high-availability Disabled;
 ```
+
+Let's define a few of the resources you just created.
+
+**Resource group:** A resource group is a container that holds related resources for an Azure solution. This sits under your Azure subscription. You now have a resource group, `analytics`, that will be comprised of all your Ed-Fi related resources.
+
+**Virtual network:** An Azure Virtual Network (VNet) enables resources to securly communicate with each other and the internet. A VNet is similar to a traditional network that would exist on-premises, but this one is virtual.
+
+**Subnet:** A subnet is a range of IP addresses in the virtual network.
+
+**Private DNS:** A Domain Name System (DNS) is responsible for translating (or resolving) a service name to an IP address. The command above created a private DNS zone to allow resources on your VNet to talk to each other.
+
+Run the command below to enable pgcrypto, a module that provides cryptographic functions for PostgreSQL, and is used by Ed-Fi.
 ```sh
-# enable pgcrypto extension
 az postgres flexible-server parameter set \
     --resource-group analytics  \
     --server-name $AZ_PG_SERVER_NAME \
     --name azure.extensions \
     --value PGCRYPTO;
 ```
+
+When you created your PostgreSQL instance, you created a database, `EdFi_Admin`. We are now going to create the databases listed below.
+
+* EdFi_Security
+* EdFi_Ods_2021
+* EdFi_Ods_2022
+* EdFi_Ods_2023
+
 ```sh
-# create databases
 az postgres flexible-server db create \
     --resource-group analytics \
     --server-name $AZ_PG_SERVER_NAME \
