@@ -25,6 +25,9 @@ brew update && brew install azure-cli;
 # Table of Contents  
 * [Environment variables](#environment-variables)
 * [Ed-Fi ODS](#ed-fi-ods)
+* [Ubuntu Jump Server](#ubuntu-jump-server)
+* [Ed-Fi API](#ed-fi-api)
+* [Ed-Fi Admin App](#ed-fi-admin-app)
 
 
 ## Environment variables
@@ -121,7 +124,7 @@ az postgres flexible-server db create \
     --database-name EdFi_Ods_2021;
 ```
 
-### Ubuntu jump server
+## Ubuntu jump server
 The PostgreSQL instance created above is a private instance and cannot be directly accessed externally. It does not have a public IP. In this section you will create an Ubuntu VM that is able to connect to the PostgreSQL instance. You will then SSH into the VM to import the Ed-Fi database templates. You are also able to create a SSH tunnel to forward ports appropriate should you want to connect a SQL IDE on your local machine to the PostgreSQL instance.
 
 This VM is not included in the pricing above because we will shutdown the VM after the import has completed.
@@ -191,7 +194,7 @@ sudo shutdown;
 ```
 
 
-### Ed-Fi API
+## Ed-Fi API
 Before you deploy the Ed-Fi API on Azure App Services, you will first build and a push a Docker image to Azure Container Registry.
 
 Run the command below to create a `LEA_NAME` variable that will be used throughout the next section. **Do not* use any hyphens, underscores, or special characters.
@@ -310,7 +313,7 @@ az webapp restart \
 Your Ed-Fi API has been deployed! Head to App Services in your Azure portal to locate your URL.
 
 
-### Ed-Fi Admin App
+## Ed-Fi Admin App
 Before you deploy the Ed-Fi Admin App on Azure App Services, you will first build and a push a Docker image to Azure Container Registry.
 
 Run the command below to build an image of the Ed-Fi Admin App and push it to your container registry.
